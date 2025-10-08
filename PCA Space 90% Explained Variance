@@ -1,0 +1,31 @@
+# t-SNE visualization in PCA space with 90% explained variance
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# PCA with enough components for 90% explained variance
+pca_full = PCA(n_components=0.9, svd_solver='full')
+patent_pca90 = pca_full.fit_transform(patent_data_clean)
+print(f"PCA shape (90% variance): {patent_pca90.shape}")
+
+# t-SNE on PCA-reduced data
+patent_tsne_pca = do_tsne(patent_pca90, n_components=1, random_state=67)
+plt.figure(figsize=(8,6))
+plt.scatter(patent_tsne_pca[:, 0], patent_tsne_pca[:, 1], c=y, cmap='viridis', alpha=0.7)
+plt.xlabel('t-SNE 1')
+plt.ylabel('t-SNE 2')
+plt.title('t-SNE Visualization in PCA Space (90% variance)')
+plt.colorbar(label='Class')
+plt.grid(True)
+plt.show()
+
+# SVM classification on t-SNE data (80/20 split)
+X_train, X_test, y_train, y_test = train_test_split(patent_tsne_pca, y, test_size=0.2, random_state=67, stratify=y)
+svm = SVC(kernel='rbf', random_state=67)
+svm.fit(X_train, y_train)
+y_pred = svm.predict(X_test)
+
+# Classification measures
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
